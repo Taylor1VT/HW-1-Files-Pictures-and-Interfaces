@@ -1,0 +1,125 @@
+Part C Design:
+
+PSEUDOCODE:
+    while there are files to be read:
+        read file
+        while there are more lines to be read:
+            read line using readaline
+            clean line, removing non-ASCII characters and extra spaces
+            make atom from cleaned line
+            make data struct containing line number and file name
+            place atom/struct key/value pair in table
+    convert table to array
+    for each entry in array:
+        if multiple ‘hits’:
+            print formatted data
+
+What data structures we will need/what each will contain.
+
+    We will need three data structures: a table, atoms, and structs. 
+    The table will contain key-value pairs of atoms and structs. 
+    The atoms will be used to index the table, and will be created from
+        readaline (each atom’s key will correspond to a simplified line
+        of text -- matching keys mean that the lines are similar). 
+    The structs will contain two variables, an int for the line number 
+        and a string for the file name.
+
+What each void * pointer will point to.
+
+    void **input_file
+        A pointer to a FILE *. 
+        This pointer will keep track of the input file buffer and will be
+            redirected to a new file every time the previous file reaches EOF.
+    
+    void **new_line
+        A pointer to a char *. 
+        This pointer is the **datap pointer for the readaline function and 
+            keeps track of each new line of input that we read.
+
+    void **array
+        A pointer to the array made by the Hanson Table function Table_toArray.
+        This pointer will keep track of the array we will use for 
+            matching group identification and output.
+
+Describe the invariant that will hold when partway through reading input lines:
+    
+    In the Kth iteration of the loop that calls readaline, there are K elements
+        in the table at an upper bound of K unique indexes. Furthermore, K is 
+        between 0 and the total number of lines in all the input files combined.
+    For each file, the Jth iteration of the loop corresponds to
+        the Jth line in the file.
+
+How we will determine the simlines groups once all input has been read:
+
+    Every similar line of text will result in a collision in
+        the table (the atoms will have matching keys). 
+    The Hanson table implementation keeps a linked list at each index
+        to handle collisions. We will create an array from the table 
+        using Table_toArray. 
+    To find matching groups, we can iterate through the array looking 
+        for linked lists of length 2 or more.
+
+How we will use our match group data structures to
+    write the required output sections:
+
+    Each location in the table is indexed by an atom, whose key happens to be
+        a line of simplified text. When we iterate through the array and 
+        find a linked list longer than 2, we print this text and then move 
+        through the list, printing the file and line numbers from the 
+        structs according to the specifications (filename.........line_num).
+
+Part B Testing Plan:
+
+    We have written a main() function that can call readaline as many times
+        as the user requires.
+    To test readaline, we will supply it with various files to read
+        to make sure the program meets output specifications.
+        Some of these files include:
+
+        Nonexistent files (user provides an incorrect file name).
+            (Should terminate with CRE).
+        Empty files (files exist but have no content).
+            (Should terminate with CRE).
+        Files that are not text or basic ASCII files (i.e. jpg, png...)
+            (Should terminate with CRE).
+        Files with more than 200 characters in a line (at this point
+            our readaline only supports lines of up to 200
+            characters in length).
+            (Should output only lines fewer than 200 characters).
+        Files with lines containing non-ASCII input.
+            (Should terminate with CRE).
+        Files with lines containing trailing whitespace.
+            (Should print all lines, including empty spaces).
+        Files containing lines of ASCII-only characters, each line
+            containing fewer than 200 characters.
+            (Should print all lines).
+
+Part C Testing Plan:
+
+    Because the reading in of files has already been tested for Part B,
+        for the testing of Part C we can focus on the file comparisons
+        implemented in simlines, and the resulting outputs.
+        These tests include:
+        
+        Passing the same file multiple times.
+            (Should result in all lines being similar).
+        Passing multiple files with the exact same content.
+            (Should result in all lines being similar).
+        Passing files in which the words of each line are similar,
+            but the whitespace/non-word characters are different.
+            (Example: Line 1: abc def, Line 2: abc &,* def)
+            (Should result in lines being similar).
+        Passing files in which the order of the characters is the same,
+            but the groupings are different.
+            (Example: Line 1: abc def, Line 2: abcd ef)
+            (Should result in lines NOT being similar).
+        Passing incorrect filenames, empty files, and non text files.
+            (Should terminate without printing to stdout).
+        Passing files in which the lines have the same words, but in
+            a different order.
+            (Should result in lines NOT being similar).
+        Passing files in which all the lines are unique.
+            (Should result in lines NOT being similar).
+        Passing files in which some lines are similar and some are not
+            (as dictated by the above tests).
+            (Should only print the similar lines).
